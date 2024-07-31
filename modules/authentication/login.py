@@ -43,6 +43,6 @@ def login_user():
                 st.error("Unknown role")
             
             # Redirigir a la página correspondiente
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("Invalid Username or Password")

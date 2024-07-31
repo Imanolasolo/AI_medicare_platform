@@ -7,4 +7,4 @@ def logout_user():
         st.session_state.role = None
         st.session_state.username = None
         st.session_state.page = 'Login'
-        st.experimental_rerun()  # Refresca la aplicación para aplicar cambios
+        st.rerun()  # Refresca la aplicación para aplicar cambios

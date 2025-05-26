@@ -2,6 +2,56 @@ import streamlit as st
 import sqlite3
 from hashlib import sha256
 
+translations = {
+    "es": {
+        "title": "Gestionar Usuarios",
+        "existing": "Usuarios Existentes",
+        "add": "Agregar Nuevo Usuario",
+        "new_username": "Nuevo Usuario",
+        "new_password": "Nueva Contraseña",
+        "role": "Rol",
+        "create": "Crear Usuario",
+        "created": "Usuario {username} creado exitosamente",
+        "update": "Actualizar Usuario",
+        "user_id_update": "ID de Usuario a Actualizar",
+        "updated_username": "Usuario Actualizado",
+        "updated_password": "Contraseña Actualizada",
+        "updated_role": "Rol Actualizado",
+        "update_btn": "Actualizar Usuario",
+        "updated": "Usuario ID {user_id} actualizado exitosamente",
+        "delete": "Eliminar Usuario",
+        "user_id_delete": "ID de Usuario a Eliminar",
+        "delete_btn": "Eliminar Usuario",
+        "deleted": "Usuario ID {user_id} eliminado exitosamente"
+    },
+    "en": {
+        "title": "Manage Users",
+        "existing": "Existing Users",
+        "add": "Add New User",
+        "new_username": "New Username",
+        "new_password": "New Password",
+        "role": "Role",
+        "create": "Create User",
+        "created": "User {username} created successfully",
+        "update": "Update User",
+        "user_id_update": "User ID to Update",
+        "updated_username": "Updated Username",
+        "updated_password": "Updated Password",
+        "updated_role": "Updated Role",
+        "update_btn": "Update User",
+        "updated": "User ID {user_id} updated successfully",
+        "delete": "Delete User",
+        "user_id_delete": "User ID to Delete",
+        "delete_btn": "Delete User",
+        "deleted": "User ID {user_id} deleted successfully"
+    }
+}
+
+def t(key, **kwargs):
+    lang = st.session_state.get("language", "en")
+    txt = translations[lang].get(key, key)
+    return txt.format(**kwargs)
+
 def hash_password(password):
     return sha256(password.encode()).hexdigest()
 
@@ -37,33 +87,31 @@ def get_users():
     return users
 
 def manage_users():
-    st.title("Manage Users")
-    
-    # Display existing users
-    st.subheader("Existing Users")
+    st.title(t("title"))
+    st.subheader(t("existing"))
     users = get_users()
     for user in users:
         st.write(f"ID: {user[0]}, Username: {user[1]}, Role: {user[3]}")
 
-    st.subheader("Add New User")
-    new_username = st.text_input("New Username")
-    new_password = st.text_input("New Password", type='password')
-    new_role = st.selectbox("Role", ["admin", "doctor", "nurse", "staff"])
-    if st.button("Create User"):
+    st.subheader(t("add"))
+    new_username = st.text_input(t("new_username"))
+    new_password = st.text_input(t("new_password"), type='password')
+    new_role = st.selectbox(t("role"), ["admin", "doctor", "nurse", "staff"])
+    if st.button(t("create")):
         create_user(new_username, new_password, new_role)
-        st.success(f"User {new_username} created successfully")
+        st.success(t("created", username=new_username))
 
-    st.subheader("Update User")
-    user_id_to_update = st.number_input("User ID to Update", min_value=1, step=1)
-    updated_username = st.text_input("Updated Username")
-    updated_password = st.text_input("Updated Password", type='password')
-    updated_role = st.selectbox("Updated Role", ["admin", "doctor", "nurse", "staff"])
-    if st.button("Update User"):
+    st.subheader(t("update"))
+    user_id_to_update = st.number_input(t("user_id_update"), min_value=1, step=1)
+    updated_username = st.text_input(t("updated_username"))
+    updated_password = st.text_input(t("updated_password"), type='password')
+    updated_role = st.selectbox(t("updated_role"), ["admin", "doctor", "nurse", "staff"])
+    if st.button(t("update_btn")):
         update_user(user_id_to_update, updated_username, updated_password, updated_role)
-        st.success(f"User ID {user_id_to_update} updated successfully")
+        st.success(t("updated", user_id=user_id_to_update))
 
-    st.subheader("Delete User")
-    user_id_to_delete = st.number_input("User ID to Delete", min_value=1, step=1)
-    if st.button("Delete User"):
+    st.subheader(t("delete"))
+    user_id_to_delete = st.number_input(t("user_id_delete"), min_value=1, step=1)
+    if st.button(t("delete_btn")):
         delete_user(user_id_to_delete)
-        st.success(f"User ID {user_id_to_delete} deleted successfully")
+        st.success(t("deleted", user_id=user_id_to_delete))

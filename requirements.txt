@@ -3,3 +3,4 @@ dotenv
 PyMuPDF
 langchain
 langchain-community
+openai

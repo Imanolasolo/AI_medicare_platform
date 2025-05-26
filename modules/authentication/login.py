@@ -2,20 +2,43 @@ import streamlit as st
 import sqlite3
 from hashlib import sha256
 
+translations = {
+    "es": {
+        "title": "Iniciar Sesión",
+        "username": "Usuario",
+        "password": "Contraseña",
+        "login": "Iniciar Sesión",
+        "invalid": "Usuario o contraseña inválidos",
+        "unknown_role": "Rol desconocido"
+    },
+    "en": {
+        "title": "Login",
+        "username": "Username",
+        "password": "Password",
+        "login": "Login",
+        "invalid": "Invalid Username or Password",
+        "unknown_role": "Unknown role"
+    }
+}
+
+def t(key):
+    lang = st.session_state.get("language", "en")
+    return translations[lang].get(key, key)
+
 def create_connection(db_file):
     """Create a database connection to the SQLite database specified by db_file."""
     conn = sqlite3.connect(db_file)
     return conn
 
 def login_user():
-    st.title("Login")
+    st.title(t("title"))
 
     # Mostrar campos de entrada para usuario y contraseña
-    username = st.text_input("Username")
-    password = st.text_input("Password", type='password')
+    username = st.text_input(t("username"))
+    password = st.text_input(t("password"), type='password')
     
     # Añadir un botón de login
-    if st.button("Login"):
+    if st.button(t("login")):
         # Hashear la contraseña
         hashed_password = sha256(password.encode()).hexdigest()
         
@@ -40,9 +63,9 @@ def login_user():
             elif user[3] == "staff":
                 st.session_state.page = "Consultations"  # Cambia según los permisos del staff
             else:
-                st.error("Unknown role")
+                st.error(t("unknown_role"))
             
             # Redirigir a la página correspondiente
             st.rerun()
         else:
-            st.error("Invalid Username or Password")
+            st.error(t("invalid"))

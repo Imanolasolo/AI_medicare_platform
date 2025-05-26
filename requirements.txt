@@ -2,3 +2,4 @@ streamlit
 dotenv
 PyMuPDF
 langchain
+langchain-community

@@ -1,3 +1,7 @@
+import os
+# OpenMP workaround for Windows
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+
 import streamlit as st
 from modules.authentication.login import login_user
 from modules.authentication.manage_users import manage_users
@@ -6,29 +10,28 @@ from modules.hospitalization.hospitalization import hospitalization_page
 from modules.operation_rooms.operation_rooms import operating_rooms_page
 from modules.emergency.emergency import emergency_page
 from modules.ICU.icu import icu_page
-from modules.authentication.logout import logout_user  # Asegúrate de tener logout.py
+from modules.authentication.logout import logout_user
 import base64
 from dotenv import load_dotenv
 import fitz  # PyMuPDF
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.vectorstores import FAISS
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_community.vectorstores import FAISS
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
-from langchain.chat_models import ChatOpenAI 
 from htmlTemplates import css, bot_template, user_template
 import os
 
 # Diccionarios de traducción
 translations = {
     "es": {
-        "ai_medicare_subheader": ":orange[BCS] :blue[AI Medicare], tu sistema de gestión hospitalaria",
+        "ai_medicare_subheader": ":blue[BCS Health], tu sistema de gestión hospitalaria",
         "ai_medicare_desc": "Gestiona tu institución de salud con nuestra plataforma personalizable basada en IA",
         "chat_expander": " Chatea con nosotros",
-        "chat_desc": "AI Medicare es una plataforma integral para la gestión de instituciones de salud usando tecnología IA.",
-        "chat_prompt": "<h5><br>Pregunta lo que quieras sobre AI Medicare, ¡no te preocupes por el idioma, somos multiidiomáticos!:</h5>",
+        "chat_desc": "BCS Health es una plataforma integral para la gestión de instituciones de salud usando tecnología IA.",
+        "chat_prompt": "<h5><br>Pregunta lo que quieras sobre BCS Health, ¡no te preocupes por el idioma, somos multiidiomáticos!:</h5>",
         "chat_placeholder": "Cuéntanos quién eres y a qué te dedicas para poder ayudarte mejor...",
-        "instructions_expander": "Instrucciones para usar la app AI Medicare",
+        "instructions_expander": "Instrucciones para usar la app BCS Health",
         "instructions": '''
             1. Inserta admin en el área de Usuario con la contraseña :red[Ilargietaeguzki1.].
             2. Cuando estés en la página de inicio de sesión, usa las opciones del selector para gestionar usuarios.
@@ -41,13 +44,13 @@ translations = {
         "hospital_management_system": "Sistema de Gestión Hospitalaria"
     },
     "en": {
-        "ai_medicare_subheader": ":orange[BCS] :blue[AI Medicare], your hospital management system",
+        "ai_medicare_subheader": ":blue[BCS Health], your hospital management system",
         "ai_medicare_desc": "Manage your health institution with our fully customizable AI based platform",
         "chat_expander": " Chat with us",
-        "chat_desc": "AI Medicare is a comprehensive platform for managing healthcare institutions using AI technology.",
-        "chat_prompt": "<h5><br>Ask anything you want about AI Medicare, don’t worry about language we are multiidiomatic!:</h5>",
+        "chat_desc": "BCS Health is a comprehensive platform for managing healthcare institutions using AI technology.",
+        "chat_prompt": "<h5><br>Ask anything you want about BCS Health, don’t worry about language we are multiidiomatic!:</h5>",
         "chat_placeholder": "Tell us who you are and what you do and we will help you better...",
-        "instructions_expander": "Instructions to use the AI Medicare app",
+        "instructions_expander": "Instructions to use the BCS Health app",
         "instructions": '''
             1. Insert admin in Username area with :red[Ilargietaeguzki1.] password.
             2. When in login page, use the options in the selector to manage users at your very own
@@ -80,8 +83,8 @@ def get_pdf_text(pdf_list):
     return text
 
 def get_text_chunks(text):
-    text_splitter = CharacterTextSplitter(
-        separator="\n",
+    text_splitter = RecursiveCharacterTextSplitter(
+        separators=["\n"],
         chunk_size=1000,
         chunk_overlap=200,
         length_function=len,
@@ -108,7 +111,7 @@ def get_conversation_chain(vector_store):
     return conversation_chain
 
 def handle_userInput(user_question):
-    response = st.session_state.conversation({'question': user_question})
+    response = st.session_state.conversation.invoke({'question': user_question})
     st.session_state.chat_history = response['chat_history']
 
     for i, msg in enumerate(st.session_state.chat_history):
@@ -120,7 +123,7 @@ def handle_userInput(user_question):
 
 def main():
     load_dotenv()
-    st.set_page_config(page_title="AI Medicare Platform", page_icon="hospital", layout="wide")
+    st.set_page_config(page_title="BCS Health Platform", page_icon="hospital", layout="wide")
     st.write(css, unsafe_allow_html=True)
 
     img_base64 = get_base64_of_bin_file('background.jpg')
@@ -145,7 +148,7 @@ def main():
     if "pdf_text" not in st.session_state:
         st.session_state.pdf_text = ""
 
-    sample_pdf_path = os.path.join(os.getcwd(), "Base_conocimiento_Medicare.pdf")
+    sample_pdf_path = os.path.join(os.getcwd(), "Base_conocimiento_BCS_Health.pdf")
     st.session_state.pdf_files = [sample_pdf_path]
 
     raw_text = get_pdf_text(st.session_state.pdf_files)
@@ -168,7 +171,7 @@ def main():
         with st.expander(t("chat_expander")):
             st.write(t("chat_desc"))
             st.write(t("chat_prompt"), unsafe_allow_html=True)
-            user_question = st.text_input(label="", placeholder=t("chat_placeholder"))
+            user_question = st.text_input(label="Chat Input", placeholder=t("chat_placeholder"), label_visibility="hidden")
             if user_question:
                 handle_userInput(user_question)
     with col3:
@@ -225,8 +228,7 @@ def main():
         elif choice == "ICU":
             icu_page()
 
-    
-    whatsapp_message = "I have issues with AI_Medicare platform, please help me"
+    whatsapp_message = "I have issues with BCS Health platform, please help me"
     whatsapp_number = "+5930993513082"
     whatsapp_link = f"https://wa.me/{whatsapp_number}?text={whatsapp_message.replace(' ', '%20')}"
     whatsapp_button = f"""
